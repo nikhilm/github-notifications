@@ -17,8 +17,8 @@ db_url = os.environ.get('DATABASE_URL', 'sqlite:////tmp/test.db')
 app.config['SQLALCHEMY_DATABASE_URI'] = db_url
 db = SQLAlchemy(app)
 
-OAUTH_CLIENT = os.environ.get('OAUTH_CLIENT', '')
-OAUTH_SECRET = os.environ.get('OAUTH_SECRET', '')
+OAUTH_CLIENT = os.environ.get('OAUTH_CLIENT', '957f3aef6a068664e00c')
+OAUTH_SECRET = os.environ.get('OAUTH_SECRET', '513448078a00f6f711d6fa1701d17cd80edaf93c')
 
 STATIC_URL = os.environ.get('STATIC_URL', 'static')
 

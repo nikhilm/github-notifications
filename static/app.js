@@ -174,8 +174,8 @@ function step1() {
   $(document).trigger('step', [1]);
 
   function test() {
-    var notification = navigator.mozNotification;
-    return !!(notification && notification.requestRemotePermission);
+    var notification = navigator.mozPushNotification;
+    return !!(notification && notification.register);
   }
 
   if (test()) {
@@ -196,29 +196,17 @@ function step2() {
   $('#step-2 li:first-child').addClass('selected');
   var promise = $.Deferred();
 
-  var notification = navigator.mozNotification,
-      check = notification.checkRemotePermission();
-  check.onsuccess = function() {
-    if (check.result.url) {
-      pushUrl = check.result.url;
-      stat('check-perm');
-      promise.resolve();
-    } else {
-      var request = notification.requestRemotePermission();
-      request.onsuccess = function() {
-        stat('request-perm');
-        pushUrl = request.result.url;
-        promise.resolve();
-      };
-      request.onerror = function() {
-        stat('request-error');
-        alert('error requesting remote permission');
-      };
-    }
+  var notification = navigator.mozPushNotification;
+  var request = notification.register();
+  request.onsuccess = function(e) {
+    stat('request-perm');
+    console.log("Push url ", e.target.result.pushEndpoint);
+    pushUrl = e.target.result.pushEndpoint;
+    promise.resolve();
   };
-  check.onerror = function() {
-    stat('check-error');
-    alert('error checking remote permission');
+  request.onerror = function() {
+    stat('request-error');
+    alert('error requesting remote permission');
   };
   promise.done(function() {
     stat('push-url');
