@@ -5,11 +5,12 @@ from logging.handlers import SMTPHandler
 import os
 import time
 import urlparse
+import uuid
 
 import redis as redislib
 import requests
 
-from flask import Flask, request, redirect, abort, session, jsonify
+from flask import Flask, request, redirect, abort, session, jsonify, Response
 from flaskext.sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
@@ -64,6 +65,7 @@ class User(Model, db.Model):
     username = db.Column(db.String(80), unique=True)
     # The push notification URL.
     push_url = db.Column(db.String(256), nullable=True)
+    latest = db.Column(db.String(), nullable=True)
 
     def __repr__(self):
         return self.username
@@ -122,18 +124,20 @@ STATS = {
     'oauthd': 'OAuth Success',
     'nav-timing': 'Navigation Timing',
     'no-nav-timing': 'No Navigation Timer',
+    'manifest': 'Manifest requested'
 }
 
 
 @app.route('/', methods=['GET'])
+@app.route('/index.html', methods=['GET'])
 def root():
-    if not app.debug and request.headers['X-Forwarded-Proto'] != 'https':
-        stat('http-redirect')
-        response = redirect('https://github-notifications.herokuapp.com', 301)
-        response.headers['Strict-Transport-Security'] = 'max-age=15768000'
-        return response
     stat('homepage')
     return open('index.html').read() % {'STATIC': STATIC_URL}
+
+@app.route('/gh.webapp', methods=['GET'])
+def manifest():
+    stat('manifest')
+    return open('gh.webapp').read()
 
 
 @app.route('/queue', methods=['POST'])
@@ -199,10 +203,10 @@ def hook():
     title = '%s - %s' % (repo['name'], commit['author']['name'])
     body = commit['message']
     action = commit['url']
+    before, after = payload['before'][:8], payload['after'][:8]
+    latest_commit = payload['commits'][-1]
     if len(payload['commits']) > 1:
         body += ' (and %s more)' % (len(payload['commits']) - 1)
-        before, after = payload['before'][:8], payload['after'][:8]
-        action = payload['compare']
 
     repo_slug = normalize(repo['url'])
     stat(repo_slug, bucket='hooks')
@@ -210,8 +214,18 @@ def hook():
     q = User.query.join(User.subscriptions).filter(Subscription.repo == repo_slug)
     for user in q.all():
         if user.push_url:
-            notify(user.push_url, title, body, action)
+            user.latest = json.dumps(latest_commit)
+            db.session.add(user)
+            db.session.commit()
+            notify(user.push_url)
     return ''
+
+@app.route('/updates')
+def updates():
+    username = session['username']
+    user = User.query.filter_by(username=username).first_or_404()
+    resp = Response(user.latest, status=200, mimetype='application/json')
+    return resp
 
 
 def normalize(repo_url):
@@ -275,11 +289,10 @@ def nav_timing():
     return ''
 
 
-def notify(queue, title, text, action=None):
+def notify(queue):
     stat('notify')
-    msg = {'title': title, 'body': text, 'actionUrl': action}
-    msg = dict((k, v) for k, v in msg.items() if v)
-    response = requests.post(queue, msg)
+    data = {'version': uuid.uuid4().hex}
+    response = requests.put(queue, data=data)
     print 'Sent notification:', response
     stat('notify:%s' % response.status_code)
 

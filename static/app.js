@@ -93,11 +93,13 @@ function getHooks() {
 }
 
 function addHook(repo) {
+    console.log("add hook");
   stat('add-hook');
   var url = repo.url + '/hooks?access_token=' + token,
       data = {name: 'web',
               active: true,
-              config: {url: document.location + 'hook'}};
+              events: ["push", "pull_request"],
+              config: {url: document.location + 'hook', content_type: "json"}};
 
   var promise = $.Deferred().done(function(hook) {
     saveHook(repo, hook);
@@ -196,6 +198,7 @@ function step2() {
   $('#step-2 li:first-child').addClass('selected');
   var promise = $.Deferred();
 
+  console.log("Step 2");
   var notification = navigator.mozPushNotification;
   var request = notification.register();
   request.onsuccess = function(e) {
@@ -299,6 +302,21 @@ function navTiming() {
     stat('no-nav-timing');
   }
 }
+
+function installApp() {
+  var req = navigator.mozApps.install('http://push.nikhilism.com/gh.webapp');
+}
+
+navigator.mozSetMessageHandler('push', {
+  handleMessage: function(e) {
+    $.getJSON('/updates', function(data) {
+       var params = {author: data['author']['name'],
+                              message: data['message'],
+                            url: data['url']};
+       $('#latest').html(Mustache.render($('#latest-template').text(), params));
+    });
+  }
+});
 
 $(document).ready(main);
 $(document).ready(navTiming);

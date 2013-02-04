@@ -1,0 +1,8 @@
+{
+  "name": "Github Watcher",
+  "description": "Constant code notifications",
+  "launch_path": "/",
+  "messages": [
+    {"push": "/"}
+  ]
+}

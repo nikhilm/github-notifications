@@ -15,7 +15,7 @@
       <p>
         This app uses Github's web hook system to send push notifications when
         someone commits to your repository. It's a demo of
-        <a href="http://jbalogh.me/2012/01/30/push-notifications/">push notifications in Firefox</a>.
+        <a href="https://wiki.mozilla.org/WebAPI/SimplePush">push notifications in Firefox</a>.
       </p>
     </div>
 
@@ -36,14 +36,12 @@
     <ol id="steps">
       <li id="step-1" class="selected">
         <script type="text/template" id="step-1-template">
-          <h2>Install the add-on</h2>
-          <a class="button" href="https://people.mozilla.com/~jbalogh/push-notifications.xpi">Install</a>
+          <h2>You don't seem to have push notifications support</h2>
           <p>
-            Firefox will ask if you'll allow <code>{{ site }}</code> to
-            install software on your computer. Press <b>Allow</b>.
-          </p>
-          <p>
-            Then press <b>Install Now</b> in the add-on install dialog box.
+            You'll need to compile a development build for Firefox/B2G
+            and apply <a href="http://hg.mozilla.org/users/nsm.nikhil_gmail.com/push-client">these patches</a> to use this application.
+
+            If you are on B2G this will not work in the browser. Install it as an application using the button below. Enjoy.
           </p>
         </script>
       </li>
@@ -70,6 +68,8 @@
       </li>
       <li id="step-3">
         <h2>Get Notifications for your Repos</h2>
+        <div id="latest" class="well">
+        </div>
         <div id="repos">
           <img height="30" width="30" src="%(STATIC)s/spinner.gif">
         </div>
@@ -86,18 +86,21 @@
 
     <footer>
       <ul>
-        <li><a class="secret" href="http://jbalogh.me">Jeff Balogh</a></li>
-        <li>jeff@jbalogh.me</li>
+        <li><a class="secret" href="http://nikhilism.com">Nikhil Marathe</a></li>
+        <li>Based on work by <a class="secret" href="http://jbalogh.me">Jeff Balogh</a></li>
         <li>Website design by <a href="https://twitter.com/tenaciouscb">@tenaciouscb</a></li>
       </ul>
       <ul>
-        <li><a href="https://github.com/jbalogh">github.com/jbalogh</a></li>
-        <li><a href="https://twitter.com/jeffbalogh">@jeffbalogh</a></li>
-        <li>Add-on design by <a href="https://twitter.com/habber">@habber</a></li></a></li>
+        <li><a href="https://github.com/nikhilm">github.com/nikhilm</a></li>
       </ul>
     </footer>
 
-    <a href="http://github.com/jbalogh/github-notifications"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://a248.e.akamai.net/assets.github.com/img/7afbc8b248c68eb468279e8c17986ad46549fb71/687474703a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub"></a>
+    <script type="text/template" id="latest-template">
+        <blockquote>
+          <p>{{ message }}</p>
+          <small><a href="{{ url }}">{{ author }}</a></small>
+        </blockquote>
+    </script>
 
     <script type="text/template" id="repos-template">
       <ul>
@@ -157,5 +160,7 @@
         s.parentNode.insertBefore(t, s);
       })();
     </script>
+
+    <button onclick="installApp(); return false;">Install as Web App</button>
   </body>
 </html>
